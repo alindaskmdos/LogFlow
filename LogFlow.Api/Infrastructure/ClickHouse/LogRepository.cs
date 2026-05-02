@@ -1,42 +1,35 @@
-using ClickHouse.Ado;
+using ClickHouse.Client.Copy;
+using ClickHouse.Client.ADO;
 using LogFlow.Api.Contracts;
+using Microsoft.Extensions.Options;
 
 namespace LogFlow.Api.Infrastructure.ClickHouse;
 
-public class LogRepository(ClickHouseOptions options) : ILogRepository
+public class LogRepository(IOptions<ClickHouseOptions> options) : ILogRepository
 {
     public async Task InsertBatchAsync(IReadOnlyCollection<IngestLogRequest> logs, CancellationToken ct = default)
     {
-        await using var connection = new ClickHouseConnection(options.ConnectionString);
+        await using var connection = new ClickHouseConnection(options.Value.ConnectionString);
 
-        await connection.OpenAsync();
+        await connection.OpenAsync(ct);
 
         using var command = connection.CreateCommand();
 
-        command.CommandText = """
-            INSERT INTO logs
-            (
-                Timestamp,
-                Service,
-                Environment,
-                Level,
-                Message,
-                Exception,
-                TraceId,
-                SpanId,
-                RequestPath,
-                Method,
-                StatusCode,
-                ElapsedMs,
-                Properties
-            )
-            VALUES @values
-            """;
-
+        using var bulkCopy = new ClickHouseBulkCopy(connection)
+        {
+            DestinationTableName = "logs",
+            BatchSize = 1000,
+            ColumnNames = new[]
+            {
+                "Timestamp", "Service", "Environment", "Level", "Message",
+                "Exception", "TraceId", "SpanId", "RequestPath", "Method",
+                "StatusCode", "ElapsedMs", "Properties"
+            }
+        };
 
         var rows = logs.Select(log => new object[]
         {
-            log.Timestamp.UtcDateTime,
+                        log.Timestamp.UtcDateTime,
             log.Service,
             log.Environment,
             log.Level,
@@ -49,15 +42,10 @@ public class LogRepository(ClickHouseOptions options) : ILogRepository
             log.StatusCode ?? 0,
             log.ElapsedMs ?? 0,
             log.Properties ?? "{}"
-        }).ToArray();
+        }).ToList();
 
-        command.Parameters.Add(new ClickHouseParameter
-        {
-            ParameterName = "values",
-            Value = rows
-        });
-
-        await command.ExecuteNonQueryAsync(ct);
+        await bulkCopy.InitAsync();
+        await bulkCopy.WriteToServerAsync(rows, ct);
     }
 
 }

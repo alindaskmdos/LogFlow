@@ -9,7 +9,7 @@ public class LogIngestionService(ILogRepository repository) : ILogIngestionServi
 
     public async Task IngestAsync(IReadOnlyCollection<IngestLogRequest> logs, CancellationToken ct = default)
     {
-        if (logs.Count() == 0)
+        if (logs.Count == 0)
         {
             throw new ArgumentException("Logs batch is empty.", nameof(logs));
         }
