@@ -1,6 +1,6 @@
 using LogFlow.Api.Contracts;
 
-namespace LogFlow.Api.Services;
+namespace LogFlow.Api.Services.Interfaces;
 
 public interface ILogIngestionService
 {

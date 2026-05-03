@@ -1,5 +1,5 @@
 using LogFlow.Api.Contracts;
-using LogFlow.Api.Services;
+using LogFlow.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LogFlow.Api.Controllers;

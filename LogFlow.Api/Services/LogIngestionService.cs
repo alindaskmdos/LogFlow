@@ -1,5 +1,6 @@
 using LogFlow.Api.Contracts;
-using LogFlow.Api.Infrastructure.ClickHouse;
+using LogFlow.Api.Infrastructure.ClickHouse.Interfaces;
+using LogFlow.Api.Services.Interfaces;
 
 namespace LogFlow.Api.Services;
 
@@ -17,6 +18,6 @@ public class LogIngestionService(ILogRepository repository) : ILogIngestionServi
         if (logs.Count > MaxBatchSize)
             throw new ArgumentException($"Logs batch size cannot exceed {MaxBatchSize}.", nameof(logs));
 
-        await repository.InsertBatchAsync(logs, ct);
+        await repository.InsertAsync(logs, ct);
     }
 }
