@@ -1,10 +1,10 @@
 using ClickHouse.Driver;
+using Microsoft.Extensions.Options;
 using LogFlow.Api.Contracts;
 using LogFlow.Api.Infrastructure.ClickHouse;
 using LogFlow.Api.Infrastructure.ClickHouse.Interfaces;
 using LogFlow.Api.Services;
 using LogFlow.Api.Services.Interfaces;
-using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +17,8 @@ builder.Services.AddSingleton<ClickHouseClient>(sp =>
 });
 builder.Services.AddScoped<ILogRepository, LogRepository>();
 builder.Services.AddScoped<ILogIngestionService, LogIngestionService>();
+builder.Services.AddScoped<IStatisticsRepository, StatisticsRepository>();
+builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 
 builder.Services.AddControllers();
 

@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using ClickHouse.Driver;
 using ClickHouse.Driver.ADO.Parameters;
 using LogFlow.Api.Contracts;
@@ -8,7 +7,7 @@ namespace LogFlow.Api.Infrastructure.ClickHouse;
 
 public class StatisticsRepository(ClickHouseClient client) : IStatisticsRepository
 {
-    public async Task<IReadOnlyDictionary<DateTimeOffset, long>> GetLogsActivityGraphAsync(DateTimeOffset from, DateTimeOffset to, TimeSpan interval, string? level, string? service, CancellationToken ct = default)
+    public async Task<IReadOnlyDictionary<DateTimeOffset, ulong>> GetLogsActivityGraphAsync(DateTimeOffset from, DateTimeOffset to, TimeSpan interval, string? level, string? service, CancellationToken ct = default)
     {
         long seconds = (long)interval.TotalSeconds;
 
@@ -40,12 +39,12 @@ public class StatisticsRepository(ClickHouseClient client) : IStatisticsReposito
         var totalCountCol = reader.GetOrdinal("TotalCount");
         var intervalCol = reader.GetOrdinal("Interval");
 
-        var graph = new Dictionary<DateTimeOffset, long>();
+        var graph = new Dictionary<DateTimeOffset, ulong>();
 
         while (await reader.ReadAsync(ct))
         {
             var timestamp = new DateTimeOffset(reader.GetDateTime(intervalCol), TimeSpan.Zero);
-            var totalCount = reader.GetInt64(totalCountCol);
+            var totalCount = reader.GetUInt64(totalCountCol);
 
             graph.Add(timestamp, totalCount);
         }
@@ -73,7 +72,7 @@ public class StatisticsRepository(ClickHouseClient client) : IStatisticsReposito
         if (!string.IsNullOrEmpty(service))
             sql += " AND Service = {service:String}";
 
-        sql += " LIMIT {limit:Int32}";
+        sql += " LIMIT {limit:Int16}";
 
         var parameters = new ClickHouseParameterCollection();
         parameters.Add(new ClickHouseDbParameter { ParameterName = "from", Value = from.UtcDateTime });
@@ -115,8 +114,8 @@ public class StatisticsRepository(ClickHouseClient client) : IStatisticsReposito
                 SpanId = reader.IsDBNull(spanIdCol) ? null : reader.GetString(spanIdCol),
                 RequestPath = reader.IsDBNull(requestPathCol) ? null : reader.GetString(requestPathCol),
                 Method = reader.IsDBNull(methodCol) ? null : reader.GetString(methodCol),
-                StatusCode = reader.IsDBNull(statusCodeCol) ? null : reader.GetInt32(statusCodeCol),
-                ElapsedMs = reader.IsDBNull(elapsedMsCol) ? null : reader.GetInt64(elapsedMsCol),
+                StatusCode = reader.IsDBNull(statusCodeCol) ? null : reader.GetUInt16(statusCodeCol),
+                ElapsedMs = reader.IsDBNull(elapsedMsCol) ? null : reader.GetUInt32(elapsedMsCol),
                 Properties = reader.IsDBNull(propertiesCol) ? null : reader.GetString(propertiesCol)
             });
         }
@@ -166,7 +165,7 @@ public class StatisticsRepository(ClickHouseClient client) : IStatisticsReposito
             {
                 Message = reader.GetString(messageCol),
                 Exception = reader.IsDBNull(exceptionCol) ? null : reader.GetString(exceptionCol),
-                TotalCount = reader.GetInt64(totalCountCol),
+                TotalCount = reader.GetUInt64(totalCountCol),
                 LastOccurrence = new DateTimeOffset(reader.GetDateTime(lastOccurrenceCol), TimeSpan.Zero)
             });
         }

@@ -37,7 +37,7 @@ public class StatisticsService(IStatisticsRepository repository) : IStatisticsSe
         return repository.GetMostFrequentErrorsAsync(from, to, service, limit, ct);
     }
 
-    public Task<IReadOnlyDictionary<DateTimeOffset, long>> GetLogsActivityGraphAsync(
+    public Task<IReadOnlyDictionary<DateTimeOffset, ulong>> GetLogsActivityGraphAsync(
         DateTimeOffset from, DateTimeOffset to,
         TimeSpan interval, string? level, string? service,
         CancellationToken ct = default)

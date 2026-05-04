@@ -1,6 +1,7 @@
+
+using ClickHouse.Driver;
 using LogFlow.Api.Contracts;
 using LogFlow.Api.Infrastructure.ClickHouse.Interfaces;
-using ClickHouse.Driver;
 
 namespace LogFlow.Api.Infrastructure.ClickHouse;
 

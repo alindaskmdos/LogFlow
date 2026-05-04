@@ -19,7 +19,7 @@ public interface IStatisticsRepository
         int limit,
         CancellationToken ct = default);
 
-    Task<IReadOnlyDictionary<DateTimeOffset, long>> GetLogsActivityGraphAsync(
+    Task<IReadOnlyDictionary<DateTimeOffset, ulong>> GetLogsActivityGraphAsync(
         DateTimeOffset from,
         DateTimeOffset to,
         TimeSpan interval,
