@@ -5,25 +5,14 @@ namespace LogFlow.Api.Infrastructure.ClickHouse.Interfaces;
 public interface IStatisticsRepository
 {
     Task<IReadOnlyList<LogResponse>> GetLogsAsync(
-        DateTimeOffset from,
-        DateTimeOffset to,
-        string? level,
-        string? service,
-        int limit,
+        GetLogsRequest request,
         CancellationToken ct = default);
 
     Task<IReadOnlyList<FrequentErrorResponse>> GetMostFrequentErrorsAsync(
-        DateTimeOffset from,
-        DateTimeOffset to,
-        string? service,
-        int limit,
+        GetFrequentErrorsRequest request,
         CancellationToken ct = default);
 
     Task<IReadOnlyDictionary<DateTimeOffset, ulong>> GetLogsActivityGraphAsync(
-        DateTimeOffset from,
-        DateTimeOffset to,
-        TimeSpan interval,
-        string? level,
-        string? service,
+        GetActivityGraphRequest request,
         CancellationToken ct = default);
 }

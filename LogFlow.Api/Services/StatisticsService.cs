@@ -18,37 +18,33 @@ public class StatisticsService(IStatisticsRepository repository) : IStatisticsSe
     }
 
     public Task<IReadOnlyList<LogResponse>> GetLogsAsync(
-        DateTimeOffset from, DateTimeOffset to,
-        string? level, string? service,
-        int limit, CancellationToken ct = default)
+        GetLogsRequest request, CancellationToken ct = default)
     {
-        ValidateDateRange(from, to);
-        limit = Math.Clamp(limit, 1, MaxLimit);
-        return repository.GetLogsAsync(from, to, level, service, limit, ct);
+        ValidateDateRange(request.From, request.To);
+        request.Limit = Math.Clamp(request.Limit, 1, MaxLimit);
+        return repository.GetLogsAsync(request, ct);
     }
 
     public Task<IReadOnlyList<FrequentErrorResponse>> GetMostFrequentErrorsAsync(
-        DateTimeOffset from, DateTimeOffset to,
-        string? service, int limit,
+        GetFrequentErrorsRequest request,
         CancellationToken ct = default)
     {
-        ValidateDateRange(from, to);
-        limit = Math.Clamp(limit, 1, 100);
-        return repository.GetMostFrequentErrorsAsync(from, to, service, limit, ct);
+        ValidateDateRange(request.From, request.To);
+        request.Limit = Math.Clamp(request.Limit, 1, 100);
+        return repository.GetMostFrequentErrorsAsync(request, ct);
     }
 
     public Task<IReadOnlyDictionary<DateTimeOffset, ulong>> GetLogsActivityGraphAsync(
-        DateTimeOffset from, DateTimeOffset to,
-        TimeSpan interval, string? level, string? service,
+        GetActivityGraphRequest request,
         CancellationToken ct = default)
     {
-        ValidateDateRange(from, to);
+        ValidateDateRange(request.From, request.To);
 
-        if (interval < TimeSpan.FromMinutes(1))
+        if (request.Interval < TimeSpan.FromMinutes(1))
             throw new ArgumentException("Interval cannot be less than 1 minute");
-        if (interval > TimeSpan.FromDays(1))
+        if (request.Interval > TimeSpan.FromDays(1))
             throw new ArgumentException("Interval cannot exceed 1 day");
 
-        return repository.GetLogsActivityGraphAsync(from, to, interval, level, service, ct);
+        return repository.GetLogsActivityGraphAsync(request, ct);
     }
 }
