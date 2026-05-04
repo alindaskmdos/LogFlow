@@ -6,7 +6,7 @@ namespace LogFlow.Api.Controllers;
 
 [ApiController]
 [Route("log/[controller]")]
-public class IngestLogController(ILogIngestionService service) : ControllerBase
+public class LogIngestionController(ILogIngestionService service) : ControllerBase
 {
     [HttpPost]
     public async Task<IActionResult> IngestLog(IReadOnlyCollection<IngestLogRequest> request, CancellationToken ct = default)

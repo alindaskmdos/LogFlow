@@ -1,16 +1,16 @@
 using LogFlow.Api.Contracts;
 
-namespace LogFlow.Api.Infrastructure.ClickHouse.Interfaces;
+namespace LogFlow.Api.Services.Interfaces;
 
-public interface IStatisticsRepository
+public interface IStatisticsService
 {
     Task<IReadOnlyList<LogResponse>> GetLogsAsync(
-        DateTimeOffset from,
-        DateTimeOffset to,
-        string? level,
-        string? service,
-        int limit,
-        CancellationToken ct = default);
+            DateTimeOffset from,
+            DateTimeOffset to,
+            string? level,
+            string? service,
+            int limit,
+            CancellationToken ct = default);
 
     Task<IReadOnlyList<FrequentErrorResponse>> GetMostFrequentErrorsAsync(
         DateTimeOffset from,

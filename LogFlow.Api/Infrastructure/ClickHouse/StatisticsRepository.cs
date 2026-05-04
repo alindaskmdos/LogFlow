@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using ClickHouse.Driver;
 using ClickHouse.Driver.ADO.Parameters;
 using LogFlow.Api.Contracts;
@@ -7,7 +8,7 @@ namespace LogFlow.Api.Infrastructure.ClickHouse;
 
 public class StatisticsRepository(ClickHouseClient client) : IStatisticsRepository
 {
-    public async Task<Dictionary<DateTimeOffset, long>> GetLogsActivityGraphAsync(DateTimeOffset from, DateTimeOffset to, TimeSpan interval, string? level, string? service, CancellationToken ct = default)
+    public async Task<IReadOnlyDictionary<DateTimeOffset, long>> GetLogsActivityGraphAsync(DateTimeOffset from, DateTimeOffset to, TimeSpan interval, string? level, string? service, CancellationToken ct = default)
     {
         long seconds = (long)interval.TotalSeconds;
 
@@ -52,7 +53,7 @@ public class StatisticsRepository(ClickHouseClient client) : IStatisticsReposito
         return graph;
     }
 
-    public async Task<List<LogResponse>> GetLogsAsync(
+    public async Task<IReadOnlyList<LogResponse>> GetLogsAsync(
         DateTimeOffset from, DateTimeOffset to,
         string? level, string? service,
         int limit,
@@ -123,7 +124,7 @@ public class StatisticsRepository(ClickHouseClient client) : IStatisticsReposito
         return logs;
     }
 
-    public async Task<List<FrequentErrorResponse>> GetMostFrequentErrorsAsync(DateTimeOffset from, DateTimeOffset to, string? service, int limit, CancellationToken ct = default)
+    public async Task<IReadOnlyList<FrequentErrorResponse>> GetMostFrequentErrorsAsync(DateTimeOffset from, DateTimeOffset to, string? service, int limit, CancellationToken ct = default)
     {
         var sql = @"
             SELECT
