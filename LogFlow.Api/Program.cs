@@ -7,6 +7,7 @@ using LogFlow.Api.Services;
 using LogFlow.Api.Services.Interfaces;
 using FluentValidation;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
+using LogFlow.Api.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +31,9 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -43,6 +47,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseExceptionHandler();
 
 app.MapControllers();
 
