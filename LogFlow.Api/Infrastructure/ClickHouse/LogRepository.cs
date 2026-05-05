@@ -1,4 +1,3 @@
-
 using ClickHouse.Driver;
 using LogFlow.Api.Contracts;
 using LogFlow.Api.Infrastructure.ClickHouse.Interfaces;
