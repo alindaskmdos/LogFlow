@@ -24,6 +24,7 @@ builder.Services.AddScoped<ILogRepository, LogRepository>();
 builder.Services.AddScoped<ILogIngestionService, LogIngestionService>();
 builder.Services.AddScoped<IStatisticsRepository, StatisticsRepository>();
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
+builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
 
 builder.Services.AddControllers();
 
