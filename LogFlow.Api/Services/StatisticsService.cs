@@ -18,24 +18,28 @@ public class StatisticsService(IStatisticsRepository repository) : IStatisticsSe
     }
 
     public Task<IReadOnlyList<LogResponse>> GetLogsAsync(
-        GetLogsRequest request, CancellationToken ct = default)
+        GetLogsRequest request,
+        string serviceName,
+        CancellationToken ct = default)
     {
         ValidateDateRange(request.From, request.To);
-        request.Limit = Math.Clamp(request.Limit, 1, MaxLimit);
-        return repository.GetLogsAsync(request, ct);
+        request = request with { Limit = Math.Clamp(request.Limit, 1, MaxLimit) };
+        return repository.GetLogsAsync(request, serviceName, ct);
     }
 
     public Task<IReadOnlyList<FrequentErrorResponse>> GetMostFrequentErrorsAsync(
         GetFrequentErrorsRequest request,
+        string serviceName,
         CancellationToken ct = default)
     {
         ValidateDateRange(request.From, request.To);
-        request.Limit = Math.Clamp(request.Limit, 1, 100);
-        return repository.GetMostFrequentErrorsAsync(request, ct);
+        request = request with { Limit = Math.Clamp(request.Limit, 1, MaxLimit) };
+        return repository.GetMostFrequentErrorsAsync(request, serviceName, ct);
     }
 
     public Task<IReadOnlyDictionary<DateTimeOffset, ulong>> GetLogsActivityGraphAsync(
         GetActivityGraphRequest request,
+        string serviceName,
         CancellationToken ct = default)
     {
         ValidateDateRange(request.From, request.To);
@@ -45,6 +49,6 @@ public class StatisticsService(IStatisticsRepository repository) : IStatisticsSe
         if (request.Interval > TimeSpan.FromDays(1))
             throw new ArgumentException("Interval cannot exceed 1 day");
 
-        return repository.GetLogsActivityGraphAsync(request, ct);
+        return repository.GetLogsActivityGraphAsync(request, serviceName, ct);
     }
 }

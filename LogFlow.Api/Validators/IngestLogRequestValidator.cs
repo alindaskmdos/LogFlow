@@ -7,10 +7,6 @@ public class IngestLogRequestValidator : AbstractValidator<IngestLogRequest>
 {
     public IngestLogRequestValidator()
     {
-        RuleFor(x => x.Service)
-            .NotEmpty().WithMessage("Service name is required")
-            .MaximumLength(100).WithMessage("Service name cannot exceed 100 characters");
-
         RuleFor(x => x.Environment)
             .NotEmpty().WithMessage("Environment is required")
             .MaximumLength(50).WithMessage("Environment cannot exceed 50 characters");

@@ -6,5 +6,6 @@ public interface ILogIngestionService
 {
     Task IngestAsync(
         IReadOnlyCollection<IngestLogRequest> logs,
+        string serviceName,
         CancellationToken ct = default);
 }

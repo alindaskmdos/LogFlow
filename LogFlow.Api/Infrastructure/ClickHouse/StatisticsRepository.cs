@@ -7,7 +7,10 @@ namespace LogFlow.Api.Infrastructure.ClickHouse;
 
 public class StatisticsRepository(ClickHouseClient client) : IStatisticsRepository
 {
-    public async Task<IReadOnlyDictionary<DateTimeOffset, ulong>> GetLogsActivityGraphAsync(GetActivityGraphRequest request, CancellationToken ct = default)
+    public async Task<IReadOnlyDictionary<DateTimeOffset, ulong>> GetLogsActivityGraphAsync(
+        GetActivityGraphRequest request,
+        string serviceName,
+        CancellationToken ct = default)
     {
         long seconds = (long)request.Interval.TotalSeconds;
 
@@ -17,22 +20,20 @@ public class StatisticsRepository(ClickHouseClient client) : IStatisticsReposito
                 toStartOfInterval(Timestamp, INTERVAL {seconds} SECOND) AS Interval
             FROM logs
             WHERE Timestamp >= {{from:DateTime64(3)}} 
-                AND Timestamp <= {{to:DateTime64(3)}}";
+                AND Timestamp <= {{to:DateTime64(3)}}
+                AND Service = {{service:String}}";
 
         if (!string.IsNullOrEmpty(request.Level))
             sql += " AND Level = {level:String}";
-        if (!string.IsNullOrEmpty(request.ServiceName))
-            sql += " AND Service = {service:String}";
 
         sql += " GROUP BY Interval ORDER BY Interval";
 
         var parameters = new ClickHouseParameterCollection();
         parameters.Add(new ClickHouseDbParameter { ParameterName = "from", Value = request.From.UtcDateTime });
         parameters.Add(new ClickHouseDbParameter { ParameterName = "to", Value = request.To.UtcDateTime });
+        parameters.Add(new ClickHouseDbParameter { ParameterName = "service", Value = serviceName });
         if (!string.IsNullOrEmpty(request.Level))
             parameters.Add(new ClickHouseDbParameter { ParameterName = "level", Value = request.Level });
-        if (!string.IsNullOrEmpty(request.ServiceName))
-            parameters.Add(new ClickHouseDbParameter { ParameterName = "service", Value = request.ServiceName });
 
         await using var reader = await client.ExecuteReaderAsync(sql, parameters, cancellationToken: ct);
 
@@ -54,6 +55,7 @@ public class StatisticsRepository(ClickHouseClient client) : IStatisticsReposito
 
     public async Task<IReadOnlyList<LogResponse>> GetLogsAsync(
         GetLogsRequest request,
+        string serviceName,
         CancellationToken ct = default)
     {
         var sql = @"
@@ -63,22 +65,20 @@ public class StatisticsRepository(ClickHouseClient client) : IStatisticsReposito
             StatusCode, ElapsedMs, Properties
         FROM logs
         WHERE Timestamp >= {from:DateTime64(3)} 
-          AND Timestamp <= {to:DateTime64(3)}";
+                    AND Timestamp <= {to:DateTime64(3)}
+                    AND Service = {service:String}";
 
         if (!string.IsNullOrEmpty(request.Level))
             sql += " AND Level = {level:String}";
-        if (!string.IsNullOrEmpty(request.ServiceName))
-            sql += " AND Service = {service:String}";
 
-        sql += " LIMIT {limit:Int16}";
+        sql += " LIMIT {limit:Int32}";
 
         var parameters = new ClickHouseParameterCollection();
         parameters.Add(new ClickHouseDbParameter { ParameterName = "from", Value = request.From.UtcDateTime });
         parameters.Add(new ClickHouseDbParameter { ParameterName = "to", Value = request.To.UtcDateTime });
+        parameters.Add(new ClickHouseDbParameter { ParameterName = "service", Value = serviceName });
         if (!string.IsNullOrEmpty(request.Level))
             parameters.Add(new ClickHouseDbParameter { ParameterName = "level", Value = request.Level });
-        if (!string.IsNullOrEmpty(request.ServiceName))
-            parameters.Add(new ClickHouseDbParameter { ParameterName = "service", Value = request.ServiceName });
         parameters.Add(new ClickHouseDbParameter { ParameterName = "limit", Value = request.Limit });
 
         await using var reader = await client.ExecuteReaderAsync(sql, parameters, cancellationToken: ct);
@@ -112,8 +112,8 @@ public class StatisticsRepository(ClickHouseClient client) : IStatisticsReposito
                 SpanId = reader.IsDBNull(spanIdCol) ? null : reader.GetString(spanIdCol),
                 RequestPath = reader.IsDBNull(requestPathCol) ? null : reader.GetString(requestPathCol),
                 Method = reader.IsDBNull(methodCol) ? null : reader.GetString(methodCol),
-                StatusCode = reader.IsDBNull(statusCodeCol) ? null : reader.GetUInt16(statusCodeCol),
-                ElapsedMs = reader.IsDBNull(elapsedMsCol) ? null : reader.GetUInt32(elapsedMsCol),
+                StatusCode = reader.IsDBNull(statusCodeCol) ? null : reader.GetInt32(statusCodeCol),
+                ElapsedMs = reader.IsDBNull(elapsedMsCol) ? null : reader.GetInt64(elapsedMsCol),
                 Properties = reader.IsDBNull(propertiesCol) ? null : reader.GetString(propertiesCol)
             });
         }
@@ -121,7 +121,10 @@ public class StatisticsRepository(ClickHouseClient client) : IStatisticsReposito
         return logs;
     }
 
-    public async Task<IReadOnlyList<FrequentErrorResponse>> GetMostFrequentErrorsAsync(GetFrequentErrorsRequest request, CancellationToken ct = default)
+    public async Task<IReadOnlyList<FrequentErrorResponse>> GetMostFrequentErrorsAsync(
+        GetFrequentErrorsRequest request,
+        string serviceName,
+        CancellationToken ct = default)
     {
         var sql = @"
             SELECT
@@ -132,10 +135,8 @@ public class StatisticsRepository(ClickHouseClient client) : IStatisticsReposito
             FROM logs
             WHERE Level = 'Error'
             AND Timestamp >= {from:DateTime64(3)} 
-            AND Timestamp <= {to:DateTime64(3)}";
-
-        if (!string.IsNullOrEmpty(request.ServiceName))
-            sql += " AND Service = {service:String}";
+            AND Timestamp <= {to:DateTime64(3)}
+            AND Service = {service:String}";
 
         sql += @" 
             GROUP BY Message, Exception
@@ -145,8 +146,7 @@ public class StatisticsRepository(ClickHouseClient client) : IStatisticsReposito
         var parameters = new ClickHouseParameterCollection();
         parameters.Add(new ClickHouseDbParameter { ParameterName = "from", Value = request.From.UtcDateTime });
         parameters.Add(new ClickHouseDbParameter { ParameterName = "to", Value = request.To.UtcDateTime });
-        if (!string.IsNullOrEmpty(request.ServiceName))
-            parameters.Add(new ClickHouseDbParameter { ParameterName = "service", Value = request.ServiceName });
+        parameters.Add(new ClickHouseDbParameter { ParameterName = "service", Value = serviceName });
         parameters.Add(new ClickHouseDbParameter { ParameterName = "limit", Value = request.Limit });
 
         await using var reader = await client.ExecuteReaderAsync(sql, parameters, cancellationToken: ct);

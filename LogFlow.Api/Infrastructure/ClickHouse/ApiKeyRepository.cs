@@ -6,7 +6,9 @@ namespace LogFlow.Api.Infrastructure.ClickHouse;
 
 public class ApiKeyRepository(ClickHouseClient client) : IApiKeyRepository
 {
-    public async Task<string?> GetServiceNameByHashAsync(string hash, CancellationToken ct = default)
+    public async Task<string?> GetServiceNameByHashAsync(
+        string hash,
+        CancellationToken ct = default)
     {
         const string sql = @"
             SELECT ServiceName 

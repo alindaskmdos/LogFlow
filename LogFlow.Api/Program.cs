@@ -3,6 +3,7 @@ using FluentValidation;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.OpenApi;
 using System.Threading.RateLimiting;
 using LogFlow.Api.Contracts;
 using LogFlow.Api.Infrastructure.ClickHouse;
@@ -25,6 +26,7 @@ builder.Services.AddScoped<ILogIngestionService, LogIngestionService>();
 builder.Services.AddScoped<IStatisticsRepository, StatisticsRepository>();
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
+builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
 
 builder.Services.AddControllers();
 
@@ -32,7 +34,21 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddFluentValidationAutoValidation();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+    {
+        Name = "x-api-key",
+        Type = SecuritySchemeType.ApiKey,
+        In = ParameterLocation.Header,
+        Description = "Введите API-ключ"
+    });
+
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("ApiKey", document)] = []
+    });
+});
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -81,6 +97,8 @@ if (app.Environment.IsDevelopment())
 app.UseExceptionHandler();
 
 app.UseRateLimiter();
+
+app.UseMiddleware<AuthMiddleware>();
 
 app.MapControllers();
 

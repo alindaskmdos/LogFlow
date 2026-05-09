@@ -4,7 +4,7 @@ namespace LogFlow.Api.Infrastructure.ClickHouse.Interfaces;
 
 public interface ILogRepository
 {
-    Task InsertAsync(
+    Task IngestAsync(
         IReadOnlyCollection<IngestLogRequest> logs,
         CancellationToken ct = default);
 }
