@@ -97,7 +97,11 @@ builder.Services.AddRateLimiter(options =>
 
 builder.Services.AddHealthChecks()
     .AddCheck<ClickHouseHealthCheck>("clickhouse", HealthStatus.Unhealthy)
-    .AddRedis(builder.Configuration["Redis:ConnectionString"]!);
+    .AddRedis(builder.Configuration["Redis:ConnectionString"]!)
+    .AddSeqPublisher(options =>
+    {
+        options.Endpoint = builder.Configuration["Serilog:WriteTo:1:Args:serverUrl"]!;
+    });
 
 var app = builder.Build();
 
