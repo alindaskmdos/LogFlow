@@ -21,12 +21,18 @@ builder.Services.AddSingleton<ClickHouseClient>(sp =>
     var options = sp.GetRequiredService<IOptions<ClickHouseOptions>>().Value;
     return new ClickHouseClient(options.ConnectionString);
 });
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration["Redis:ConnectionString"];
+    options.InstanceName = "logflow:";
+});
 builder.Services.AddScoped<ILogRepository, LogRepository>();
 builder.Services.AddScoped<ILogIngestionService, LogIngestionService>();
 builder.Services.AddScoped<IStatisticsRepository, StatisticsRepository>();
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
-builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
+builder.Services.AddScoped<ApiKeyService>();
+builder.Services.AddScoped<IApiKeyService, CacheApiKeyService>();
 
 builder.Services.AddControllers();
 
