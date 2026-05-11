@@ -1,10 +1,13 @@
 using ClickHouse.Driver;
 using FluentValidation;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
+using Serilog;
+using HealthChecks.UI.Client;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Threading.RateLimiting;
 using LogFlow.Api.Contracts;
 using LogFlow.Api.Infrastructure.ClickHouse;
@@ -12,8 +15,6 @@ using LogFlow.Api.Infrastructure.ClickHouse.Interfaces;
 using LogFlow.Api.Services;
 using LogFlow.Api.Services.Interfaces;
 using LogFlow.Api.Middlewares;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using HealthChecks.UI.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,6 +58,11 @@ builder.Services.AddSwaggerGen(options =>
     {
         [new OpenApiSecuritySchemeReference("ApiKey", document)] = []
     });
+});
+
+builder.Host.UseSerilog((context, config) =>
+{
+    config.ReadFrom.Configuration(context.Configuration);
 });
 
 builder.Services.AddProblemDetails();
