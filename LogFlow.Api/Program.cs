@@ -4,6 +4,7 @@ using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using System.Threading.RateLimiting;
 using LogFlow.Api.Contracts;
 using LogFlow.Api.Infrastructure.ClickHouse;
@@ -11,6 +12,8 @@ using LogFlow.Api.Infrastructure.ClickHouse.Interfaces;
 using LogFlow.Api.Services;
 using LogFlow.Api.Services.Interfaces;
 using LogFlow.Api.Middlewares;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using HealthChecks.UI.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -86,6 +89,10 @@ builder.Services.AddRateLimiter(options =>
     };
 });
 
+builder.Services.AddHealthChecks()
+    .AddCheck<ClickHouseHealthCheck>("clickhouse", HealthStatus.Unhealthy)
+    .AddRedis(builder.Configuration["Redis:ConnectionString"]!);
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -99,6 +106,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.MapHealthChecks("health", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
 
 app.UseExceptionHandler();
 

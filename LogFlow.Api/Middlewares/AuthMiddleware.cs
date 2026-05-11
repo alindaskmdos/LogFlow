@@ -11,7 +11,8 @@ public class AuthMiddleware(RequestDelegate next)
     {
         if (context.Request.Path.StartsWithSegments("/openapi") ||
                 context.Request.Path.StartsWithSegments("/scalar") ||
-                context.Request.Path.StartsWithSegments("/swagger"))
+                context.Request.Path.StartsWithSegments("/swagger") ||
+                context.Request.Path.StartsWithSegments("/health"))
         {
             await next(context);
             return;
