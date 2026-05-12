@@ -99,6 +99,7 @@ builder.Services.AddRateLimiter(options =>
 
 builder.Services.AddHealthChecks()
     .AddCheck<ClickHouseHealthCheck>("clickhouse", HealthStatus.Unhealthy)
+    .AddCheck<SeqHealthCheck>("seq", HealthStatus.Degraded)
     .AddRedis(builder.Configuration["Redis:ConnectionString"]!)
     .AddSeqPublisher(options =>
     {
