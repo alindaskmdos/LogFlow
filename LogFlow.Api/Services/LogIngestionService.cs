@@ -1,10 +1,10 @@
+using System.Threading.Channels;
 using LogFlow.Api.Contracts;
-using LogFlow.Api.Infrastructure.ClickHouse.Interfaces;
 using LogFlow.Api.Services.Interfaces;
 
 namespace LogFlow.Api.Services;
 
-public class LogIngestionService(ILogRepository repository) : ILogIngestionService
+public class LogIngestionService(LogChannel channel) : ILogIngestionService
 {
     private const int MaxBatchSize = 1000;
 
@@ -24,6 +24,6 @@ public class LogIngestionService(ILogRepository repository) : ILogIngestionServi
 
         var normalizedLogs = logs.Select(x => x with { Service = serviceName }).ToArray();
 
-        await repository.IngestAsync(normalizedLogs, ct);
+        await channel.WriteAsync(normalizedLogs, ct);
     }
 }

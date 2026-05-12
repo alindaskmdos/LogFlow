@@ -30,6 +30,8 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.Configuration = builder.Configuration["Redis:ConnectionString"];
     options.InstanceName = "logflow:";
 });
+builder.Services.AddSingleton<LogChannel>();
+builder.Services.AddHostedService<LogBatchWorker>();
 builder.Services.AddScoped<ILogRepository, LogRepository>();
 builder.Services.AddScoped<ILogIngestionService, LogIngestionService>();
 builder.Services.AddScoped<IStatisticsRepository, StatisticsRepository>();
