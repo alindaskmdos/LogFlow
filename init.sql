@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS logflow.logs
     `SpanId` Nullable(String),
     `RequestPath` Nullable(String),
     `Method` Nullable(String),
-    `StatusCode` Nullable(Int32),
-    `ElapsedMs` Nullable(Int64),
+    `StatusCode` Nullable(String),
+    `ElapsedMs` Nullable(String),
     `Properties` Nullable(String)
 )
 ENGINE = MergeTree

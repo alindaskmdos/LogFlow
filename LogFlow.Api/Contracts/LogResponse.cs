@@ -5,7 +5,7 @@ public record LogResponse
     public DateTimeOffset Timestamp { get; init; }
 
     public string Service { get; init; } = string.Empty;
-    public string Environment { get; init; } = string.Empty;
+    public string? Environment { get; init; } = string.Empty;
     public string Level { get; init; } = string.Empty;
 
     public string Message { get; init; } = string.Empty;
@@ -16,8 +16,8 @@ public record LogResponse
 
     public string? RequestPath { get; init; }
     public string? Method { get; init; }
-    public int? StatusCode { get; init; }
-    public long? ElapsedMs { get; init; }
+    public string? StatusCode { get; init; }
+    public string? ElapsedMs { get; init; }
 
     public string? Properties { get; init; }
 }

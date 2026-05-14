@@ -1,12 +1,9 @@
-using System.Text.Json.Serialization;
+namespace LogFlow.Sdk.Contracts;
 
-namespace LogFlow.Api.Contracts;
-
-public record IngestLogRequest
+public record LogResponse
 {
-    public DateTimeOffset Timestamp { get; init; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset Timestamp { get; init; }
 
-    [JsonIgnore]
     public string Service { get; init; } = string.Empty;
     public string? Environment { get; init; } = string.Empty;
     public string Level { get; init; } = string.Empty;

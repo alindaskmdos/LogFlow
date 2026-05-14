@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace LogFlow.Api.Contracts;
+namespace LogFlow.Sdk.Contracts;
 
 public record IngestLogRequest
 {

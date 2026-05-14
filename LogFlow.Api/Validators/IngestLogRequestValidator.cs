@@ -7,10 +7,6 @@ public class IngestLogRequestValidator : AbstractValidator<IngestLogRequest>
 {
     public IngestLogRequestValidator()
     {
-        RuleFor(x => x.Environment)
-            .NotEmpty().WithMessage("Environment is required")
-            .MaximumLength(50).WithMessage("Environment cannot exceed 50 characters");
-
         RuleFor(x => x.Level)
             .NotEmpty().WithMessage("Log level is required")
             .MaximumLength(20).WithMessage("Log level cannot exceed 20 characters");

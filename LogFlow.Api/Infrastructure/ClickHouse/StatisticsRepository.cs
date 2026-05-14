@@ -112,8 +112,8 @@ public class StatisticsRepository(ClickHouseClient client) : IStatisticsReposito
                 SpanId = reader.IsDBNull(spanIdCol) ? null : reader.GetString(spanIdCol),
                 RequestPath = reader.IsDBNull(requestPathCol) ? null : reader.GetString(requestPathCol),
                 Method = reader.IsDBNull(methodCol) ? null : reader.GetString(methodCol),
-                StatusCode = reader.IsDBNull(statusCodeCol) ? null : reader.GetInt32(statusCodeCol),
-                ElapsedMs = reader.IsDBNull(elapsedMsCol) ? null : reader.GetInt64(elapsedMsCol),
+                StatusCode = reader.IsDBNull(statusCodeCol) ? null : reader.GetString(statusCodeCol),
+                ElapsedMs = reader.IsDBNull(elapsedMsCol) ? null : reader.GetString(elapsedMsCol),
                 Properties = reader.IsDBNull(propertiesCol) ? null : reader.GetString(propertiesCol)
             });
         }
