@@ -33,6 +33,24 @@ services:
     volumes:
       - seq_data:/data
 
+  logflow-api:
+    build:
+      context: ..
+      dockerfile: LogFlow.Api/Dockerfile
+    container_name: logflow-api
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - Serilog__WriteTo__1__Args__serverUrl=http://logflow-seq:80
+      - ClickHouse__ConnectionString=Host=logflow-clickhouse;Port=8123;Database=${CLICKHOUSE_DB};Username=${CLICKHOUSE_USER};Password=${CLICKHOUSE_PASSWORD}
+      - Redis__ConnectionString=logflow-redis:6379
+    depends_on:
+      - clickhouse
+      - redis
+      - seq
+
 volumes:
   clickhouse_data:
   redis_data:
