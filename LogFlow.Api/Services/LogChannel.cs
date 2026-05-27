@@ -22,9 +22,24 @@ public class LogChannel
         _channel = Channel.CreateBounded<IngestLogRequest>(options);
     }
 
-    public async Task WriteAsync(IEnumerable<IngestLogRequest> logs, CancellationToken ct = default)
+    public async Task<bool> WriteAsync(
+        IEnumerable<IngestLogRequest> logs,
+        TimeSpan timeout,
+        CancellationToken ct = default)
     {
-        foreach (var log in logs)
-            await _channel.Writer.WriteAsync(log, ct);
+        using var timeoutCts = new CancellationTokenSource(timeout);
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+
+        try
+        {
+            foreach (var log in logs)
+                await _channel.Writer.WriteAsync(log, linkedCts.Token);
+
+            return true;
+        }
+        catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested)
+        {
+            return false;
+        }
     }
 }

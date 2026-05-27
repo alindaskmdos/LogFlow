@@ -8,7 +8,7 @@ public class LogIngestionService(LogChannel channel) : ILogIngestionService
 {
     private const int MaxBatchSize = 1000;
 
-    public async Task IngestAsync(
+    public async Task<bool> IngestAsync(
         IReadOnlyCollection<IngestLogRequest> logs,
         string serviceName,
         CancellationToken ct = default)
@@ -24,6 +24,14 @@ public class LogIngestionService(LogChannel channel) : ILogIngestionService
 
         var normalizedLogs = logs.Select(x => x with { Service = serviceName }).ToArray();
 
-        await channel.WriteAsync(normalizedLogs, ct);
+        var accepted = await channel.WriteAsync(
+            logs,
+            TimeSpan.FromSeconds(5),
+            ct);
+
+        if (!accepted)
+            return false;
+
+        return true;
     }
 }

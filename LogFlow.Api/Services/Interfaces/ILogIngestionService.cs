@@ -4,7 +4,7 @@ namespace LogFlow.Api.Services.Interfaces;
 
 public interface ILogIngestionService
 {
-    Task IngestAsync(
+    Task<bool> IngestAsync(
         IReadOnlyCollection<IngestLogRequest> logs,
         string serviceName,
         CancellationToken ct = default);
