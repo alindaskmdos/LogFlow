@@ -1,17 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>LogFlow.Sdk</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>alindaskmdos</Authors>
     <Description>LogFlow SDK</Description>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/alindaskmdos/LogFlow</RepositoryUrl>
   </PropertyGroup>
-  <!-- <ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Serilog.Sinks.PeriodicBatching" Version="5.0.0" />
-  </ItemGroup> -->
+  </ItemGroup>
 </Project>

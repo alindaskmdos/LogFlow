@@ -23,7 +23,10 @@ public class LogIngestionController(ILogIngestionService service) : ControllerBa
                 title: "Internal error",
                 detail: "ServiceName not found in httpcontext");
 
-        await service.IngestAsync(request, serviceName, ct);
+        var accepted = await service.IngestAsync(request, serviceName, ct);
+
+        if (!accepted)
+            return StatusCode(503, "Log queue is full, try again later.");
 
         return Accepted();
     }
