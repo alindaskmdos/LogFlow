@@ -71,6 +71,7 @@ public class StatisticsRepository(ClickHouseClient client) : IStatisticsReposito
         if (!string.IsNullOrEmpty(request.Level))
             sql += " AND Level = {level:String}";
 
+        sql += " ORDER BY Timestamp DESC";
         sql += " LIMIT {limit:Int32}";
 
         var parameters = new ClickHouseParameterCollection();
