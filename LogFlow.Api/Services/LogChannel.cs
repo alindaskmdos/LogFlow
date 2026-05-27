@@ -14,7 +14,7 @@ public class LogChannel
     {
         var options = new BoundedChannelOptions(Capacity)
         {
-            FullMode = BoundedChannelFullMode.DropOldest,
+            FullMode = BoundedChannelFullMode.Wait,
             SingleReader = true,
             SingleWriter = false
         };
