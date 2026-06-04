@@ -23,6 +23,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
 
                  options.BatchSize = 2;
                  options.Period = TimeSpan.FromSeconds(1);
+                 options.IncludeOnlyRequestLogs = true;
              }));
 });
 

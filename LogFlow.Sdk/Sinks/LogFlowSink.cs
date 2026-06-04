@@ -2,10 +2,11 @@ using System.Text.Json;
 using Serilog.Events;
 using Serilog.Sinks.PeriodicBatching;
 using LogFlow.Sdk.Contracts;
+using LogFlow.Sdk.Options;
 
 namespace LogFlow.Sdk.Sinks;
 
-public class LogFlowSink(LogFlowClient client) : IBatchedLogEventSink
+public class LogFlowSink(LogFlowClient client, LogFlowOptions options) : IBatchedLogEventSink
 {
     private static readonly string[] AllowedSources =
     {
@@ -19,29 +20,27 @@ public class LogFlowSink(LogFlowClient client) : IBatchedLogEventSink
 
         foreach (var log in batch)
         {
-            if (!IsRequestLog(log))
+            if (options.IncludeOnlyRequestLogs && !IsRequestLog(log))
                 continue;
 
-            var newLog = new IngestLogRequest()
+            var newLog = new IngestLogRequest
             {
                 Timestamp = log.Timestamp,
-                Environment = log.Properties.TryGetValue("Environment", out var environment)
-                    ? environment.ToString().Trim('"') : string.Empty,
+                Environment = GetProperty(log, "Environment") ?? string.Empty,
                 Level = log.Level.ToString(),
                 Message = log.RenderMessage(),
                 Exception = log.Exception?.ToString(),
                 TraceId = log.TraceId?.ToString(),
                 SpanId = log.SpanId?.ToString(),
-                RequestPath = log.Properties.TryGetValue("RequestPath", out var requestPath)
-                    ? requestPath.ToString().Trim('"') : null,
-                Method = log.Properties.TryGetValue("RequestMethod", out var method)
-                    ? method.ToString().Trim('"') : null,
-                StatusCode = log.Properties.TryGetValue("StatusCode", out var statusCode)
-                    ? statusCode.ToString().Trim('"') : null,
-                ElapsedMs = log.Properties.TryGetValue("Elapsed", out var elapsedMs)
-                    ? elapsedMs.ToString().Trim('"') : null,
+                RequestPath = GetProperty(log, "RequestPath"),
+                Method = GetProperty(log, "RequestMethod")
+                    ?? GetProperty(log, "Method"),
+                StatusCode = GetProperty(log, "StatusCode"),
+                ElapsedMs = GetProperty(log, "Elapsed")
+                    ?? GetProperty(log, "ElapsedMs"),
                 Properties = log.Properties.Count == 0
-                    ? null : JsonSerializer.Serialize(log.Properties.ToDictionary(
+                    ? null
+                    : JsonSerializer.Serialize(log.Properties.ToDictionary(
                         item => item.Key,
                         item => item.Value.ToString().Trim('"')))
             };
@@ -63,6 +62,13 @@ public class LogFlowSink(LogFlowClient client) : IBatchedLogEventSink
             return Array.Exists(AllowedSources, s => s == source);
         }
         return false;
+    }
+
+    private static string? GetProperty(LogEvent logEvent, string propertyName)
+    {
+        return logEvent.Properties.TryGetValue(propertyName, out var value)
+            ? value.ToString().Trim('"')
+            : null;
     }
 
     public Task OnEmptyBatchAsync()
