@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>LogFlow.Sdk</PackageId>
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
     <Authors>alindaskmdos</Authors>
     <Description>LogFlow SDK</Description>
     <PackageOutputPath>./nupkg</PackageOutputPath>
