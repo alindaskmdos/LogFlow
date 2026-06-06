@@ -15,7 +15,7 @@ public static class LoggerConfigurationExtensions
         configureOptions(options);
 
         var client = new LogFlowClient(new HttpClient(), options);
-        var sink = new LogFlowSink(client);
+        var sink = new LogFlowSink(client, options);
 
         var batchingOptions = new PeriodicBatchingSinkOptions
         {

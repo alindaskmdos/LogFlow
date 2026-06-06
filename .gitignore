@@ -12,6 +12,7 @@ artifacts/
 *.userosscache
 *.sln.docstates
 *.nupkg
+nuget.exe
 *.snupkg
 
 # Rider / JetBrains

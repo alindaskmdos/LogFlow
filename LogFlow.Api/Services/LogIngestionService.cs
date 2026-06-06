@@ -22,10 +22,16 @@ public class LogIngestionService(LogChannel channel) : ILogIngestionService
         if (string.IsNullOrWhiteSpace(serviceName))
             throw new ArgumentException("Service name is required.", nameof(serviceName));
 
-        var normalizedLogs = logs.Select(x => x with { Service = serviceName }).ToArray();
+        var normalizedLogs = logs.Select(x => x with
+        {
+            Service = serviceName,
+            Environment = x.Environment ?? string.Empty,
+            Level = x.Level ?? string.Empty,
+            Message = x.Message ?? string.Empty
+        }).ToArray();
 
         var accepted = await channel.WriteAsync(
-            logs,
+            normalizedLogs,
             TimeSpan.FromSeconds(5),
             ct);
 
