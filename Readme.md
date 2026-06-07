@@ -1,219 +1,235 @@
-# LogFlow
+<p align="center">
+  <h1 align="center">LogFlow</h1>
+  <p align="center">
+    Централизованный сбор, хранение и аналитика логов
+    <br />
+    ASP.NET Core · ClickHouse · Redis · Serilog
+  </p>
+</p>
 
-LogFlow — lightweight система для централизованного сбора, хранения и анализа логов на базе ASP.NET Core и ClickHouse
-
-Проект состоит из:
-
-* LogFlow.Api — API для ingestion и аналитики логов
-* LogFlow.Sdk — SDK для отправки логов из .NET приложений
-* ClickHouse — основное хранилище логов
-* Redis — кэш API-ключей
-* Seq — внутреннее логирование и диагностика системы
-
-Проект находится в стадии активной разработки
-
----
-
-# Возможности
-
-## Ingestion API
-
-* Прием batch логов через HTTP API
-* API-key авторизация
-* Асинхронная запись логов
-* Очередь ingestion через Channel
-* Batch insert в ClickHouse
-* Rate limiting
-* Health checks
-
-## Аналитика
-
-* Получение логов по временному диапазону
-* Фильтрация по уровню логирования
-* Граф активности логов
-* Анализ наиболее частых ошибок
-
-## SDK
-
-* Отправка логов в LogFlow.Api
-* Поддержка Serilog sink
-* Поддержка .NET 8 и .NET 10
+<p align="center">
+  <a href="#быстрый-старт">Быстрый старт</a> ·
+  <a href="#sdk">SDK</a> ·
+  <a href="#api">API</a>
+</p>
 
 ---
 
-# Архитектура
+## О проекте
 
-```text
-Application / SDK
-        ↓
-   LogFlow.Api
-        ↓
-   Channel Queue
-        ↓
-  Batch Worker
-        ↓
-   ClickHouse
-```
+LogFlow — self-hosted система для сбора структурированных логов из .NET-приложений. Принимает логи по HTTP, буферизирует через in-memory channel и batch-вставками записывает в ClickHouse.
 
-Логи принимаются API, помещаются в bounded channel, после чего background worker записывает их batch-вставками в ClickHouse
+| Компонент | Описание |
+|---|---|
+| **LogFlow.Api** | HTTP API для приёма логов и аналитических запросов |
+| **LogFlow.Sdk** | .NET SDK — HTTP-клиент + Serilog sink ([NuGet](https://www.nuget.org/packages/LogFlow.Sdk)) |
+| **LogFlow.DemoApi** | Демо-приложение с примером интеграции SDK |
 
----
+## Возможности
 
-# Используемые технологии
+**Ingestion** — Batch-приём логов, bounded channel очередь, фоновый воркер для batch-вставок, авторизация по API-ключам (SHA-256), rate limiting (1000 запросов / 10 сек), валидация через FluentValidation.
 
-| Компонент        | Технология     |
-| ---------------- | -------------- |
-| Backend API      | ASP.NET Core   |
-| Storage          | ClickHouse     |
-| Cache            | Redis          |
-| Internal Logging | Seq + Serilog  |
-| SDK              | .NET SDK       |
-| Containerization | Docker Compose |
+**Аналитика** — Запрос логов по временному диапазону и уровню, граф активности с настраиваемым интервалом, топ самых частых ошибок.
 
----
+**SDK** — Serilog sink с периодическим батчингом, настройка размера батча и интервала, фильтрация только HTTP-запросов, поддержка .NET 8 и .NET 10.
 
-# Структура репозитория
+**Инфраструктура** — ClickHouse с партиционированием по месяцам и TTL 14 дней, Redis-кэш API-ключей, Seq для внутренней диагностики, health checks, Docker Compose.
 
-```text
-LogFlow/
-│
-├── LogFlow.Api/
-├── LogFlow.Sdk/
-├── LogFlow.slnx
-└── README.md
-```
+## Быстрый старт
 
----
+### Требования
 
-# Быстрый старт
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- [Docker](https://docs.docker.com/get-docker/) и Docker Compose
 
-## Требования
-
-* .NET 10 SDK
-* Docker
-* Docker Compose
-
----
-
-## Запуск инфраструктуры
-
-Из папки `LogFlow.Api`:
+### Запуск
 
 ```bash
+cd LogFlow.Api
+cp .env.example .env   # при необходимости поменять пароли
 docker compose up -d
 ```
 
-После запуска будут доступны:
+После запуска:
 
-| Сервис          | URL                                                            |
-| --------------- | -------------------------------------------------------------- |
-| LogFlow API     | [http://localhost:5000](http://localhost:5000)                 |
-| Swagger         | [http://localhost:5000/swagger](http://localhost:5000/swagger) |
-| Seq             | [http://localhost:5341](http://localhost:5341)                 |
-| ClickHouse HTTP | [http://localhost:8123](http://localhost:8123)                 |
+| Сервис | URL |
+|---|---|
+| LogFlow API | http://localhost:5000 |
+| Swagger UI | http://localhost:5000/swagger |
+| Seq | http://localhost:5341 |
+| ClickHouse | http://localhost:8123 |
+| Health Check | http://localhost:5000/health |
 
----
+### Тестовые API-ключи
 
-# API ключи
+Для локальной разработки предустановлены три ключа:
 
-Для локального тестирования доступны demo API keys
+| Ключ | Сервис | Активен |
+|---|---|---|
+| `logflow-test-1` | DemoService | ✅ |
+| `logflow-test-2` | DemoService | ❌ |
+| `logflow-test-3` | NotDemoService | ✅ |
 
-Передавать ключ необходимо через заголовок:
-
-```http
-x-api-key: logflow-test-1
-```
-
-Demo ключи предназначены только для локальной разработки и тестирования
-
----
-
-# Ingestion API
-
-## Endpoint
-
-```http
-POST /log/LogIngestion
-```
-
-## Пример запроса
-
-```json
-[
-  {
-    "timestamp": "2026-01-01T12:00:00Z",
-    "environment": "Development",
-    "level": "Information",
-    "message": "Request completed",
-    "traceId": "trace-123",
-    "spanId": "span-123",
-    "requestPath": "/api/users",
-    "method": "GET",
-    "statusCode": "200",
-    "elapsedMs": "12",
-    "properties": "{\"userId\":1}"
-  }
-]
-```
-
-## Ответ
-
-```http
-202 Accepted
-```
+Передаётся через заголовок `x-api-key`.
 
 ---
 
-# Statistics API
+## SDK
 
-## Получение логов
-
-```http
-GET /api/statistics/logs
-```
-
-## Получение графа активности
-
-```http
-GET /api/statistics/activity
-```
-
-## Получение частых ошибок
-
-```http
-GET /api/statistics/errors/frequent
-```
-
----
-
-# Health Checks
-
-Система использует ASP.NET Core Health Checks
-
-Endpoint:
-
-```http
-GET /health
-```
-
-Проверяются:
-
-* ClickHouse
-* Redis
-* Seq
-
----
-
-# SDK
-
-## Установка
+### Установка
 
 ```bash
 dotnet add package LogFlow.Sdk
 ```
 
-## Возможности SDK
+### Serilog Sink
 
-* HTTP клиент для отправки логов
-* Serilog sink
-* Контракты запросов и ответов
+SDK предоставляет Serilog sink с автоматическим батчингом.
+
+```csharp
+using LogFlow.Sdk.Sinks;
+
+builder.Host.UseSerilog((context, config) =>
+{
+    config
+        .MinimumLevel.Information()
+        .Enrich.FromLogContext()
+        .WriteTo.Console()
+        .WriteTo.Logger(sub => sub
+            .WriteTo.LogFlow(options =>
+            {
+                options.Url = "http://localhost:5000";
+                options.ApiKey = "logflow-test-1";
+                options.BatchSize = 100;
+                options.Period = TimeSpan.FromSeconds(10);
+                options.IncludeOnlyRequestLogs = true;
+            }));
+});
+```
+
+При включённом `IncludeOnlyRequestLogs` пересылаются только логи от `Serilog.AspNetCore.RequestLoggingMiddleware` — удобно для сбора метрик HTTP-запросов без лишнего шума.
+
+### Конфигурация
+
+| Параметр | Тип | По умолчанию | Описание |
+|---|---|---|---|
+| `Url` | `string` | `""` | Базовый URL LogFlow API |
+| `ApiKey` | `string` | `""` | API-ключ |
+| `BatchSize` | `int` | `100` | Макс. логов в батче |
+| `Period` | `TimeSpan` | `10s` | Интервал отправки |
+| `IncludeOnlyRequestLogs` | `bool` | `false` | Только логи HTTP-запросов |
+
+---
+
+## API
+
+Все эндпоинты требуют заголовок `x-api-key`. Имя сервиса определяется автоматически по ключу.
+
+### Приём логов
+
+```
+POST /log/LogIngestion
+```
+
+Принимает JSON-массив логов (макс. 1000 за запрос). Rate limit: 1000 запросов / 10 сек.
+
+```json
+[
+  {
+    "timestamp": "2026-06-07T12:00:00Z",
+    "environment": "Production",
+    "level": "Information",
+    "message": "GET /api/users completed",
+    "traceId": "abc123",
+    "requestPath": "/api/users",
+    "method": "GET",
+    "statusCode": "200",
+    "elapsedMs": "12",
+    "properties": "{\"userId\": 42}"
+  }
+]
+```
+
+Ответ: `202 Accepted` или `503` если внутренняя очередь переполнена.
+
+### Получение логов
+
+```
+GET /api/statistics/logs
+```
+
+| Параметр | Тип | Обязателен | По умолчанию | Описание |
+|---|---|---|---|---|
+| `from` | `DateTimeOffset` | ✅ | — | Начало диапазона |
+| `to` | `DateTimeOffset` | ✅ | — | Конец диапазона |
+| `level` | `string` | ❌ | — | Фильтр по уровню |
+| `limit` | `int` | ❌ | `100` | Макс. записей (1–1000) |
+
+### Частые ошибки
+
+```
+GET /api/statistics/errors/frequent
+```
+
+Возвращает ошибки, сгруппированные по сообщению, с количеством и временем последнего появления.
+
+| Параметр | Тип | Обязателен | По умолчанию |
+|---|---|---|---|
+| `from` | `DateTimeOffset` | ✅ | — |
+| `to` | `DateTimeOffset` | ✅ | — |
+| `limit` | `int` | ❌ | `10` (1–100) |
+
+### Граф активности
+
+```
+GET /api/statistics/activity
+```
+
+Возвращает количество логов, агрегированных по временным интервалам.
+
+| Параметр | Тип | Обязателен | Описание |
+|---|---|---|---|
+| `from` | `DateTimeOffset` | ✅ | Начало диапазона |
+| `to` | `DateTimeOffset` | ✅ | Конец диапазона |
+| `interval` | `TimeSpan` | ✅ | Интервал агрегации (1 мин – 1 день) |
+| `level` | `string` | ❌ | Фильтр по уровню |
+
+### Health Check
+
+```
+GET /health
+```
+
+Проверяет состояние ClickHouse, Redis и Seq.
+
+---
+
+## Схема данных
+
+Таблица `logflow.logs` — MergeTree, партиционирование по месяцам, сортировка по `(Service, Level, Timestamp)`, TTL 14 дней.
+
+| Поле | Тип | Описание |
+|---|---|---|
+| `Timestamp` | `DateTime64(3)` | Время лога (UTC) |
+| `Service` | `LowCardinality(String)` | Имя сервиса (из API-ключа) |
+| `Environment` | `LowCardinality(String)` | Окружение |
+| `Level` | `LowCardinality(String)` | Уровень лога |
+| `Message` | `String` | Сообщение |
+| `Exception` | `Nullable(String)` | Исключение |
+| `TraceId` / `SpanId` | `Nullable(String)` | Distributed tracing |
+| `RequestPath` | `Nullable(String)` | Путь запроса |
+| `Method` | `Nullable(String)` | HTTP-метод |
+| `StatusCode` | `Nullable(String)` | HTTP-статус |
+| `ElapsedMs` | `Nullable(String)` | Длительность запроса |
+| `Properties` | `Nullable(String)` | Произвольные свойства (JSON) |
+
+## Стек
+
+| Слой | Технология |
+|---|---|
+| API | ASP.NET Core (.NET 10) |
+| Хранилище | ClickHouse |
+| Кэш | Redis |
+| Валидация | FluentValidation |
+| Логирование | Serilog + Seq |
+| Контейнеризация | Docker Compose |
